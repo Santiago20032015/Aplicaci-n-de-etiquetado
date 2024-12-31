@@ -1,0 +1,138 @@
+import os
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+from google.colab.patches import cv2_imshow
+from google.colab import files
+# -------------------------
+# Sección 1: Configuración inicial
+# -------------------------
+# Lista de clases y colores asociados
+def get_class_colors(classes):
+    np.random.seed(42)  # Asegurar colores consistentes
+    return {cls: tuple(np.random.randint(0, 255, 3).tolist()) for cls in classes}
+
+classes = []  # Clases que se irán agregando dinámicamente
+class_colors = {}
+annotations = {}  # Diccionario para almacenar etiquetas de las imágenes
+
+# Directorio para guardar resultados
+output_dir = "yolo_labels"
+os.makedirs(output_dir, exist_ok=True)
+# -------------------------
+# Sección 2: Cargar y mostrar imágenes
+# -------------------------
+def load_image(file_path):
+    """Carga una imagen desde un archivo."""
+    img = cv2.imread(file_path)
+    if img is None:
+        raise ValueError(f"No se pudo cargar la imagen: {file_path}")
+    return img
+
+def display_image(img):
+    """Muestra una imagen en Colab."""
+    cv2_imshow(img)
+# -------------------------
+# Sección 3: Dibujar bounding boxes
+# -------------------------
+def draw_bounding_boxes(img, boxes):
+    """Dibuja los bounding boxes en la imagen."""
+    for box in boxes:
+        x1, y1, x2, y2, cls = box
+        color = class_colors.get(cls, (255, 255, 255))
+        cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
+        cv2.putText(img, cls, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+    return img
+# -------------------------
+# Sección 4: Etiquetado interactivo
+# -------------------------
+def annotate_image(file_path):
+    global classes, class_colors, annotations
+
+    img = load_image(file_path)
+    img_copy = img.copy()
+    height, width, _ = img.shape
+
+    # Cargar etiquetas previas si existen
+    if file_path in annotations:
+        boxes = annotations[file_path]
+        img_copy = draw_bounding_boxes(img_copy, boxes)
+
+    display_image(img_copy)
+
+    print("Clases actuales:", classes)
+
+    while True:
+        print("1. Agregar clase nueva")
+        print("2. Dibujar bounding box")
+        print("3. Guardar y salir")
+        option = input("Selecciona una opción: ")
+
+        if option == "1":
+            new_class = input("Introduce el nombre de la nueva clase: ")
+            if new_class not in classes:
+                classes.append(new_class)
+                class_colors = get_class_colors(classes)
+                print(f"Clase '{new_class}' agregada.")
+
+        elif option == "2":
+            print("Introduce las coordenadas del bounding box.")
+            try:
+                x1, y1 = map(int, input("Introduce x1, y1 (separados por espacio): ").split())
+                x2, y2 = map(int, input("Introduce x2, y2 (separados por espacio): ").split())
+                cls = input(f"Selecciona una clase ({', '.join(classes)}): ")
+
+                if cls not in classes:
+                    print(f"Clase '{cls}' no existe. Agrégala primero.")
+                    continue
+
+                annotations.setdefault(file_path, []).append((x1, y1, x2, y2, cls))
+                img_copy = draw_bounding_boxes(img.copy(), annotations[file_path])
+                display_image(img_copy)
+            except ValueError:
+                print("Error: Asegúrate de introducir coordenadas válidas.")
+
+        elif option == "3":
+            save_annotations(file_path, width, height)
+            print(f"Etiquetas guardadas para {file_path}")
+            break
+        else:
+            print("Opción no válida. Inténtalo de nuevo.")
+# -------------------------
+# Sección 5: Guardar etiquetas en formato YOLO
+# -------------------------
+def save_annotations(file_path, img_width, img_height):
+    """Convierte y guarda las anotaciones en formato YOLO."""
+    global annotations
+    yolo_labels = []
+
+    if file_path not in annotations:
+        return
+
+    for box in annotations[file_path]:
+        x1, y1, x2, y2, cls = box
+        class_id = classes.index(cls)
+
+        # Convertir a formato YOLO
+        x_center = ((x1 + x2) / 2) / img_width
+        y_center = ((y1 + y2) / 2) / img_height
+        box_width = (x2 - x1) / img_width
+        box_height = (y2 - y1) / img_height
+
+        yolo_labels.append(f"{class_id} {x_center} {y_center} {box_width} {box_height}")
+
+    # Guardar el archivo de etiquetas
+    base_name = os.path.splitext(os.path.basename(file_path))[0]
+    label_path = os.path.join(output_dir, f"{base_name}.txt")
+
+    with open(label_path, "w") as f:
+        f.write("\n".join(yolo_labels))
+# -------------------------
+# Uso del sistema
+#--------------------------
+uploaded = files.upload()  # Subir imágenes
+
+for file_name in uploaded.keys():
+    annotate_image(file_name)
+
+print("¡Etiquetado completado! Las etiquetas se encuentran en el directorio 'yolo_labels'.")
