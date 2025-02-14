@@ -1,0 +1,38 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+  }
+  
+  #container {
+    width: 1000px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 20px;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+  }
+  
+  #controls {
+    margin-bottom: 10px;
+  }
+  
+  #canvasContainer {
+    border: 1px solid #ccc;
+    margin-top: 10px;
+  }
+  
+  #classList {
+    margin-top: 10px;
+  }
+  
+  #classesUl {
+    list-style: none;
+    padding: 0;
+  }
+  
+  #classesUl li {
+    padding: 4px;
+    margin: 2px 0;
+  }
+  

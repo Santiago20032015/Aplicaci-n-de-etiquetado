@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Etiquetador de Imágenes YOLO</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <!-- Se incluye Fabric.js desde CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.js" integrity="sha512-hOJ0mwaJavqi11j0XoBN1PtOJ3ykPdP6lp9n29WVVVVZxgx9LO7kMwyyhaznGJ+kbZrDN1jFZMt2G9bxkOHWFQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script></head>
+<body>
+  <div id="container">
+    <h1>Etiquetador de Imágenes YOLO</h1>
+    <div id="controls">
+      <!-- Cargador de imagen -->
+      <input type="file" id="imageLoader" name="imageLoader" accept="image/*"/>
+      <!-- Botón para añadir una nueva clase -->
+      <button id="addClassBtn">Añadir clase</button>
+      <!-- Listado de clases -->
+      <div id="classList">
+        <h3>Clases</h3>
+        <ul id="classesUl"></ul>
+      </div>
+    </div>
+    <div id="canvasContainer">
+      <!-- Canvas de Fabric.js -->
+      <canvas id="c" width="800" height="600"></canvas>
+    </div>
+    <!-- Botón para guardar las etiquetas -->
+    <button id="saveBtn">Guardar etiquetas</button>
+  </div>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
